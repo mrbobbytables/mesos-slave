@@ -1,8 +1,8 @@
 ################################################################################
-# mesos-slave:1.0.0
+# mesos-slave:1.1.0
 # Date: 9/27/2015
 # Docker Version: 1.8.2~trusty
-# Mesos Version: 0.23.0-1.0
+# Mesos Version: 0.24.1-0.2.35.ubuntu1404
 #
 # Description:
 # Mesos slave container with docker-engine installed. With Docker moving away
@@ -10,7 +10,7 @@
 # container itself. 
 ################################################################################
 
-FROM mrbobbytables/mesos-base:1.0.0
+FROM mrbobbytables/mesos-base:1.1.0
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
