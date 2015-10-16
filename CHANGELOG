@@ -1,2 +1,6 @@
+2015-10-16 - 1.0.2:
+  - Bump to Mesos 0.23.1-0.2.61.ubuntu1404
+  - Bump to Docker to 1.8.3
+
 2015-10-07 - 1.0.1:
   - Updated to use Oracle java 8. 

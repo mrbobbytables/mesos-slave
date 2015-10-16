@@ -5,9 +5,9 @@ An Ubuntu based Mesos Slave container, packaged with Logstash-Forwarder and mana
 
 ##### Version Information:
 
-* **Container Release:** 1.0.1
-* **Mesos:** 0.23.0
-* **Docker:** 1.8.2-0~trusty
+* **Container Release:** 1.0.2
+* **Mesos:** 0.23.1-0.2.61.ubuntu1404
+* **Docker:** 1.8.3-0~trusty
 
 **Services Include:**
 * **[Mesos Slave](#mesos-slave)** - Primary process that offers resources of the host to the Mesos Master(s) for scheduling and running of tasks.
@@ -34,7 +34,7 @@ An Ubuntu based Mesos Slave container, packaged with Logstash-Forwarder and mana
 
 ### Usage
 
-All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@4ce5475](https://github.com/apache/mesos/blob/4ce5475346a0abb7ef4b7ffc9836c5836d7c7a66/docs/configuration.md)
+All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@a9ea8b1](https://github.com/apache/mesos/tree/a9ea8b104bf94902789d8691a21801335ccf2a9c/docs/configuration.md)
 
 In a local **proof of concept** environment, the only variable that **MUST** be definied is `MESOS_MASTER`.
 
@@ -186,7 +186,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 #### Mesos-Slave
 
-As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@4ce5475](https://github.com/apache/mesos/blob/4ce5475346a0abb7ef4b7ffc9836c5836d7c7a66/docs/configuration.md).
+As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@a9ea8b1](https://github.com/apache/mesos/tree/a9ea8b104bf94902789d8691a21801335ccf2a9c/docs/configuration.md).
 
 The actual mesos start command is passed to supervisor via the `SERVICE_MESOS_CMD` environment variable, and defaults to `mesos-slave`.
 
