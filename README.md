@@ -5,13 +5,14 @@ An Ubuntu based Mesos Slave container, packaged with Logstash-Forwarder and mana
 
 ##### Version Information:
 
-* **Container Release:** 1.1.1
+* **Container Release:** 1.1.2
 * **Mesos:** 0.24.1-0.2.35.ubuntu1404
 * **Docker:** 1.8.3-0~trusty
 
 
 **Services Include:**
 * **[Mesos Slave](#mesos-slave)** - Primary process that offers resources of the host to the Mesos Master(s) for scheduling and running of tasks.
+* **[Logrotate](#logrotate)** - A script and application that aid in pruning log files.
 * **[Logstash-Forwarder](#logstash-forwarder)** - A lightweight log collector and shipper for use with [Logstash](https://www.elastic.co/products/logstash).
 * **[Redpill](#redpill)** - A bash script and healthcheck for supervisord managed services. It is capable of running cleanup scripts that should be executed upon container termination.
 
@@ -26,6 +27,7 @@ An Ubuntu based Mesos Slave container, packaged with Logstash-Forwarder and mana
 * [Important Environment Variables](#important-environment-variables)
 * [Service Configuration](#service-configuration)
  * [Mesos](#mesos)
+ * [Logrotate](#logrotate)
  * [Logstash-Forwarder](#logstash-forwarder)
  * [Redpill](#redpill)
 * [Troubleshooting](#troubleshooting)
@@ -127,6 +129,10 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 | `PARENT_HOST`                     | `unknown`                                   |
 | `MESOS_LOG_DIR`                   | `/var/log/mesos`                            |
 | `MESOS_WORK_DIR`                  |                                             |
+| `GLOG_max_log_size`               |                                             |
+| `SERVICE_LOGROTATE`               |                                             |
+| `SERVICE_LOGROTATE_INTERVAL`      | `3600` (set in script by default)           |
+| `SERVICE_LOGROTATE_SCRIPT`        | `/opt/scripts/purge-mesos-logs.sh`          |
 | `SERVICE_LOGSTASH_FORWARDER`      |                                             |
 | `SERVICE_LOGSTASH_FORWARDER_CONF` | `/opt/logstash-forwarder/mesos-slave.conf`  |
 | `SERVICE_REDPILL`                 |                                             |
@@ -146,6 +152,14 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 * `MESOS_WORK_DIR` - Path to the directory in which framework directories are placed.
 
+* `GLOG_max_file_size` - The size in Megabytes that the mesos log file(s) will be allowed to grow to before rotation.
+
+* `SERVICE_LOGROTATE` - Enables or disabled the Logrotate service. This will be set automatically depending on the environment. (**Options:** `enabled` or `disabled`)
+
+* `SERVICE_LOGROTATE_INTERVAL` - The time in seconds between runs of logrotate or the logrotate script. The default (3600 or 1 hour) is set by default in the logrotate script automatically.
+
+* `SERVICE_LOGROTATE_SCRIPT` - The path to the script that should be executed instead of logrotate itself to clean up logs.
+
 * `SERVICE_LOGSTASH_FORWARDER` - Enables or disables the Logstash-Forwarder service. Set automatically depending on the `ENVIRONMENT`. See the Environment section below.  (**Options:** `enabled` or `disabled`)
 
 * `SERVICE_LOGSTASH_FORWARDER_CONF` - The path to the logstash-forwarder configuration.
@@ -164,6 +178,8 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 | **Variable**                 | **Default**                |
 |------------------------------|----------------------------|
 | `MESOS_HOSTNAME`             | `<first ip bound to eth0>` |
+| `GLOG_max_log_size`          | `10`                       |
+| `SERVICE_LOGROATE`           | `enabled`                  |
 | `SERVICE_LOGSTASH_FORWARDER` | `disabled`                 |
 | `SERVICE_REDPILL`            | `enabled`                  |
 | `MESOS_WORK_DIR`             | `/var/lib/mesos`           |
@@ -173,6 +189,8 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 | **Variable**                 | **Default** |
 |------------------------------|-------------|
+| `GLOG_max_log_size`          | `10`        |
+| `SERVICE_LOGROATE`           | `enabled`   |
 | `SERVICE_LOGSTASH_FORWARDER` | `enabled`   |
 | `SERVICE_REDPILL`            | `enabled`   |
 
@@ -181,6 +199,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 | **Variable**                 | **Default** |
 |------------------------------|-------------|
+| `SERVICE_LOGROTATE`          | `disabled`  |
 | `SERVICE_LOGSTASH_FORWARDER` | `disabled`  |
 | `SERVICE_REDPILL`            | `disabled`  |
 
@@ -221,6 +240,75 @@ The actual mesos start command is passed to supervisor via the `SERVICE_MESOS_CM
 
 ---
 
+## Logrotate
+
+The logrotate script is a small simple script that will either call and execute logrotate on a given interval; or execute a supplied script. This is useful for applications that do not perform their own log cleanup.
+
+#### Logrotate Environment Variables
+
+##### Defaults
+
+| **Variable**                 | **Default**                        |
+|------------------------------|------------------------------------|
+| `SERVICE_LOGROTATE`          |                                    |
+| `SERVICE_LOGROTATE_INTERVAL` | `3600`                             |
+| `SERVICE_LOGROTATE_CONFIG`   | `/etc/logrotate.conf`              |
+| `SERVICE_LOGROTATE_SCRIPT`   | `/opt/scripts/purge-mesos-logs.sh` |
+| `SERVICE_LOGROTATE_FORCE`    |                                    |
+| `SERVICE_LOGROTATE_VERBOSE`  |                                    |
+| `SERVICE_LOGROTATE_DEBUG`    |                                    |
+| `SERVICE_LOGROTATE_CMD`      | `/opt/script/logrotate.sh <flags>` |
+
+##### Description
+
+* `SERVICE_LOGROTATE` - Enables or disables the Logrotate service. Set automatically depending on the `ENVIRONMENT`. See the Environment section.  (**Options:** `enabled` or `disabled`)
+
+* `SERVICE_LOGROTATE_INTERVAL` - The time in seconds between run of either the logrotate command or the provided logrotate script. Default is set to `3600` or 1 hour in the script itself.
+
+* `SERVICE_LOGROTATE_CONFIG` - The path to the logrotate config file. If neither config or script is provided, it will default to `/etc/logrotate.conf`.
+
+* `SERVICE_LOGROTATE_SCRIPT` - A script that should be executed on the provided interval. Useful to do cleanup of logs for applications that already handle rotation, or if additional processing is required.
+
+* `SERVICE_LOGROTATE_FORCE` - If present, passes the 'force' command to logrotate. Will be ignored if a script is provided.
+
+* `SERVICE_LOGROTATE_VERBOSE` - If present, passes the 'verbose' command to logrotate. Will be ignored if a script is provided.
+
+* `SERVICE_LOGROTATE_DEBUG` - If present, passed the 'debug' command to logrotate. Will be ignored if a script is provided.
+
+* `SERVICE_LOGROTATE_CMD` - The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
+
+
+##### Logrotate Script Help Text
+```
+root@ec58ca7459cb:/opt/scripts# ./logrotate.sh --help
+logrotate.sh - Small wrapper script for logrotate.
+-i | --interval     The interval in seconds that logrotate should run.
+-c | --config       Path to the logrotate config.
+-s | --script       A script to be executed in place of logrotate.
+-f | --force        Forces log rotation.
+-v | --verbose      Display verbose output.
+-d | --debug        Enable debugging, and implies verbose output. No state file changes.
+-h | --help         This usage text.
+```
+
+##### Supplied Cleanup Script
+
+The below cleanup script will remove all but the latest 5 rotated logs.
+```
+#!/bin/bash
+
+mld=${MESOS_LOG_DIR:-/var/log/mesos}
+
+cd "$mld"
+
+(ls -t | grep 'log.INFO.*'|head -n 5;ls)|sort|uniq -u|grep 'log.INFO.*'|xargs --no-run-if-empty rm
+(ls -t | grep 'log.ERROR.*'|head -n 5;ls)|sort|uniq -u|grep 'log.ERROR.*'|xargs --no-run-if-empty rm
+(ls -t | grep 'log.WARNING.*'|head -n 5;ls)|sort|uniq -u|grep 'log.WARNING.*'|xargs --no-run-if-empty rm
+```
+
+
+---
+
 ### Logstash-Forwarder
 
 Logstash-Forwarder is a lightweight application that collects and forwards logs to a logstash server endpoint for further processing. For more information see the [Logstash-Forwarder](https://github.com/elastic/logstash-forwarder) project.
@@ -236,7 +324,7 @@ Logstash-Forwarder is a lightweight application that collects and forwards logs 
 | `SERVICE_LOGSTASH_FORWARDER_CONF`    | `/opt/logstash-forwarder/mesos-slave.conf`                                              |
 | `SERVICE_LOGSTASH_FORWARDER_ADDRESS` |                                                                                        |
 | `SERVICE_LOGSTASH_FORWARDER_CERT`    |                                                                                        |
-| `SERVICE_LOGSTASH_FORWARDER_CMD`     | `/opt/logstash-forwarder/logstash-fowarder -cofig="${SERVICE_LOGSTASH_FOWARDER_CONF}"` |
+| `SERVICE_LOGSTASH_FORWARDER_CMD`     | `/opt/logstash-forwarder/logstash-fowarder -config="${SERVICE_LOGSTASH_FOWARDER_CONF}"` |
 
 
 ##### Description
