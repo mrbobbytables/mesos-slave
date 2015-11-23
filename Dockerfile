@@ -1,7 +1,7 @@
 ################################################################################
-# mesos-slave:1.1.2
-# Date: 11/08/2015
-# Docker Version: 1.8.3~trusty
+# mesos-slave:1.1.3
+# Date: 11/23/2015
+# Docker Version: 1.9.1~trusty
 # Mesos Version: 0.24.1-0.2.35.ubuntu1404
 #
 # Description:
@@ -10,12 +10,12 @@
 # container itself. 
 ################################################################################
 
-FROM mrbobbytables/mesos-base:1.1.1
+FROM mrbobbytables/mesos-base:1.1.2
 
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
-ENV VERSION_DOCKER=1.8.3-0~trusty
+ENV VERSION_DOCKER=1.9.1-0~trusty
 
 RUN apt-get update                           \
  && apt-get -y install apt-transport-https   \
