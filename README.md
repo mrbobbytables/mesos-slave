@@ -37,7 +37,7 @@ An Ubuntu based Mesos Slave container, packaged with Logstash-Forwarder and mana
 
 ### Usage
 
-All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@2dd7f7e](https://github.com/apache/mesos/tree/2dd7f7ee115fe00b8e098b0a10762a4fa8f4600f/docs/configuration.md)
+All mesos commands should be passed via environment variables (please see the [example run command](#example-run-command) below). For Mesos documentation, please see the configuration docs associated with the release here: [mesos@d3717e5](https://github.com/apache/mesos/tree/d3717e5c4d1bf4fca5c41cd7ea54fae489028faa/docs/configuration.md)
 
 In a local **proof of concept** environment, the only variable that **MUST** be defined is `MESOS_MASTER`.
 
@@ -210,7 +210,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 #### Mesos-Slave
 
-As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@2dd7f7e](https://github.com/apache/mesos/tree/2dd7f7ee115fe00b8e098b0a10762a4fa8f4600f/docs/configuration.md).
+As stated in the [Usage](#usage) section, Mesos-slave configuration information can be found in the github docs releated to the Mesos Release: [mesos@d3717e5](https://github.com/apache/mesos/tree/d3717e5c4d1bf4fca5c41cd7ea54fae489028faa/docs/configuration.md).
 
 The actual mesos start command is passed to supervisor via the `SERVICE_MESOS_CMD` environment variable, and defaults to `mesos-slave`.
 
