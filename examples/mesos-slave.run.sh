@@ -1,4 +1,5 @@
-docker run -d --net=host    \
+docker run -d--net=host     \
+--pid=host                  \
 --name=mesosslave           \ 
 --cap-add=SYS_ADMIN         \
 -e ENVIRONMENT=production   \

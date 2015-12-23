@@ -73,6 +73,7 @@ In either case, if you intend on baking the credentials into the image. This wou
 
 ```bash
 docker run -d --net=host    \
+--pid=host                  \
 --name=mesosslave           \
 --cap-add=SYS_ADMIN         \
 -e ENVIRONMENT=production   \
