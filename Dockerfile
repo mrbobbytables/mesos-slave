@@ -1,6 +1,6 @@
 ################################################################################
-# mesos-slave:1.1.5
-# Date: 12/21/2015
+# mesos-slave:1.2.0
+# Date: 1/21/2016
 # Docker Version: 1.9.1~trusty
 # Mesos Version: 0.26.0-0.2.145.ubuntu1404
 #
@@ -10,7 +10,7 @@
 # container itself. 
 ################################################################################
 
-FROM mrbobbytables/mesos-base:1.1.4
+FROM mrbobbytables/mesos-base:1.2.0
 
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
