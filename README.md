@@ -5,16 +5,18 @@ An Ubuntu based Mesos Slave container, packaged with Logstash-Forwarder and mana
 
 ##### Version Information:
 
-* **Container Release:** 1.1.5
+* **Container Release:** 1.2.0
 * **Mesos:**  0.26.0-0.2.145.ubuntu1404
 * **Docker:** 1.9.1-0~trusty
 
 
 **Services Include:**
 * **[Mesos Slave](#mesos-slave)** - Primary process that offers resources of the host to the Mesos Master(s) for scheduling and running of tasks.
+* **[Consul-Template](#consul-template)** - An application that can populate configs from a consul service.
 * **[Logrotate](#logrotate)** - A script and application that aid in pruning log files.
 * **[Logstash-Forwarder](#logstash-forwarder)** - A lightweight log collector and shipper for use with [Logstash](https://www.elastic.co/products/logstash).
 * **[Redpill](#redpill)** - A bash script and healthcheck for supervisord managed services. It is capable of running cleanup scripts that should be executed upon container termination.
+* **[Rsyslog](#rsyslog)** - The system logging daemon.
 
 ---
 ---
@@ -27,9 +29,11 @@ An Ubuntu based Mesos Slave container, packaged with Logstash-Forwarder and mana
 * [Important Environment Variables](#important-environment-variables)
 * [Service Configuration](#service-configuration)
  * [Mesos](#mesos)
+ * [Consul-Template](#consul-template)
  * [Logrotate](#logrotate)
  * [Logstash-Forwarder](#logstash-forwarder)
  * [Redpill](#redpill)
+ * [Rsyslog](#rsyslog)
 * [Troubleshooting](#troubleshooting)
 
 ---
@@ -131,6 +135,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 | `MESOS_LOG_DIR`                   | `/var/log/mesos`                            |
 | `MESOS_WORK_DIR`                  |                                             |
 | `GLOG_max_log_size`               |                                             |
+| `SERVICE_CONSUL_TEMPLATE`         | `disabled`                                  |
 | `SERVICE_LOGROTATE`               |                                             |
 | `SERVICE_LOGROTATE_INTERVAL`      | `3600` (set in script by default)           |
 | `SERVICE_LOGROTATE_SCRIPT`        | `/opt/scripts/purge-mesos-logs.sh`          |
@@ -138,6 +143,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 | `SERVICE_LOGSTASH_FORWARDER_CONF` | `/opt/logstash-forwarder/mesos-slave.conf`  |
 | `SERVICE_REDPILL`                 |                                             |
 | `SERVICE_REDPILL_MONITOR`         | `mesos`                                     |
+| `SERVICE_RSYSLOG`                 | `disabled`                                  |
 
 ##### Description
 
@@ -155,6 +161,8 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 * `GLOG_max_file_size` - The size in Megabytes that the mesos log file(s) will be allowed to grow to before rotation.
 
+* `SERVICE_CONSUL_TEMPLATE - * `SERVICE_CONSUL_TEMPLATE` - Enables or disables the consul-template service. If enabled, it will also enable `SERVICE_LOGROTATE` and `SERVICE_RSYSLOG` to handle logging. (**Options:** `enabled` or `disabled`)
+
 * `SERVICE_LOGROTATE` - Enables or disabled the Logrotate service. This will be set automatically depending on the environment. (**Options:** `enabled` or `disabled`)
 
 * `SERVICE_LOGROTATE_INTERVAL` - The time in seconds between runs of logrotate or the logrotate script. The default (3600 or 1 hour) is set by default in the logrotate script automatically.
@@ -169,6 +177,7 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 
 * `SERVICE_REDPILL_MONITOR` - The name of the supervisord service(s) that the Redpill service check script should monitor.
 
+* `SERVICE_RSYSLOG` - Enables of disables the rsyslog service. This is managed by `SERVICE_CONSUL_TEMPLATE`, but can be enabled/disabled manually. (**Options:** `enabled` or `disabled`)
 
 ---
 
@@ -203,6 +212,9 @@ In practice, the supplied Logstash-Forwarder config should be used as an example
 | `SERVICE_LOGROTATE`          | `disabled`  |
 | `SERVICE_LOGSTASH_FORWARDER` | `disabled`  |
 | `SERVICE_REDPILL`            | `disabled`  |
+| `CONSUL_TEMPLATE_LOG_LEVEL`  | `debug` *   |
+
+\* Only set if `SERVICE_CONSUL_TEMPLATE` is set to `enabled`.
 
 ---
 ---
@@ -237,6 +249,25 @@ The actual mesos start command is passed to supervisor via the `SERVICE_MESOS_CM
 * `MESOS_WORK_DIR` - Path to the directory in which framework directories are placed.
 
 * `SERVICE_MESOS_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
+
+
+---
+
+
+### Consul-Template
+
+Provides initial configuration of consul-template. Variables prefixed with `CONSUL_TEMPLATE_` will automatically be passed to the consul-template service at runtime, e.g. `CONSUL_TEMPLATE_SSL_CA_CERT=/etc/consul/certs/ca.crt` becomes `-ssl-ca-cert="/etc/consul/certs/ca.crt"`. If managing the application configuration is handled via file configs, no other variables must be passed at runtime.
+
+#### Consul-Template Environment Variables
+
+##### Defaults
+
+| **Variable**                  | **Default**                           |
+|-------------------------------|---------------------------------------|
+| `CONSUL_TEMPLATE_CONFIG`      | `/etc/consul/template/conf.d`         |
+| `CONSUL_TEMPLATE_SYSLOG`      | `true`                                |
+| `SERVICE_CONSUL_TEMPLATE`     |                                       |
+| `SERVICE_CONSUL_TEMPLATE_CMD` | `consul-template <CONSUL_TEMPLATE_*>` |
 
 
 ---
@@ -305,6 +336,11 @@ cd "$mld"
 (ls -t | grep 'log.INFO.*'|head -n 5;ls)|sort|uniq -u|grep 'log.INFO.*'|xargs --no-run-if-empty rm
 (ls -t | grep 'log.ERROR.*'|head -n 5;ls)|sort|uniq -u|grep 'log.ERROR.*'|xargs --no-run-if-empty rm
 (ls -t | grep 'log.WARNING.*'|head -n 5;ls)|sort|uniq -u|grep 'log.WARNING.*'|xargs --no-run-if-empty rm
+
+#consul-template uses rsyslog for logging, need to run logrotate to handle that log
+if [[ "$SERVICE_CONSUL_TEMPLATE" == "enabled" ]]; then
+  /usr/sbin/logrotate /etc/logrotate.conf
+fi
 ```
 
 
@@ -339,6 +375,30 @@ Logstash-Forwarder is a lightweight application that collects and forwards logs 
 * `SERVICE_LOGSTASH_FORWARDER_CERT` - The path to the Logstash-Forwarder server certificate.
 
 * `SERVICE_LOGSTASH_FORWARDER_CMD` - The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
+
+
+---
+
+
+### Rsyslog
+Rsyslog is a high performance log processing daemon. For any modifications to the config, it is best to edit the rsyslog configs directly (`/etc/rsyslog.conf` and `/etc/rsyslog.d/*`).
+
+##### Defaults
+
+| **Variable**                      | **Default**                                      |
+|-----------------------------------|--------------------------------------------------|
+| `SERVICE_RSYSLOG`                 | `disabled`                                       |
+| `SERVICE_RSYSLOG_CONF`            | `/etc/rsyslog.conf`                              |
+| `SERVICE_RSYSLOG_CMD`             | `/usr/sbin/rsyslogd -n -f $SERVICE_RSYSLOG_CONF` |
+
+##### Description
+
+* `SERVICE_RSYSLOG` - Enables or disables the rsyslog service. This will automatically be set depending on what other services are enabled. (**Options:** `enabled` or `disabled`)
+
+* `SERVICE_RSYSLOG_CONF` - The path to the rsyslog configuration file.
+
+* `SERVICE_RSYSLOG_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
+
 
 ---
 
